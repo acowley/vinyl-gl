@@ -1,0 +1,25 @@
+name:                vinyl-gl
+version:             0.1.0.0
+synopsis:            Utilities for working with OpenGL's GLSL shading language and vinyl records.
+-- description:         
+license:             BSD3
+license-file:        LICENSE
+author:              Anthony Cowley
+maintainer:          acowley@gmail.com
+copyright:           Copyright (C) 2013 Anthony Cowley
+category:            Graphics
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Data.Vinyl.Reflect, 
+                       Graphics.VinylGL, 
+                       Graphics.VinylGL.Uniforms, 
+                       Graphics.VinylGL.Vertex, 
+                       Graphics.VinylGL.Viewport
+  -- other-modules:       
+  build-depends:       base >= 4.6, transformers >= 0.3, vinyl >= 0.1.3, 
+                       containers >= 0.5, GLUtil >= 0.6, OpenGL >= 2.8, 
+                       tagged >= 0.4, vector >= 0.10, linear >= 1.1
+  hs-source-dirs:      src
+  default-language:    Haskell2010
