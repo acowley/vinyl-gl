@@ -5,8 +5,7 @@
 -- with vertices represented as vinyl records.
 module Graphics.VinylGL.Vertex (bufferVertices, bindVertices, reloadVertices,
                                 enableVertices, enableVertices',
-                                BufferedVertices, BufferSource(..),
-                                fieldToVAD) where
+                                BufferedVertices, fieldToVAD) where
 import Control.Applicative
 import Control.Arrow (second)
 import Data.Foldable (Foldable, foldMap)
@@ -31,21 +30,10 @@ import Graphics.VinylGL.Uniforms
 newtype BufferedVertices (fields::[*]) = 
   BufferedVertices { getBuffer :: GL.BufferObject }
 
--- | A class for things we know how to serialize into an OpenGL
--- buffer.
-class BufferSource v where
-  fromSource :: v -> IO GL.BufferObject
-
-instance Storable a => BufferSource [a] where
-  fromSource = makeBuffer ArrayBuffer
-
-instance Storable a => BufferSource (V.Vector a) where
-  fromSource = fromVector ArrayBuffer
-
 -- | Load vertex data into a GPU-accessible buffer.
 bufferVertices :: (Storable (PlainRec rs), BufferSource (v (PlainRec rs)))
                => v (PlainRec rs) -> IO (BufferedVertices rs)
-bufferVertices = fmap BufferedVertices . fromSource
+bufferVertices = fmap BufferedVertices . fromSource ArrayBuffer
 
 reloadVertices :: Storable (PlainRec rs)
                => BufferedVertices rs -> V.Vector (PlainRec rs) -> IO ()
