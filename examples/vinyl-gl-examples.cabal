@@ -15,7 +15,7 @@ copyright:           Copyright (C) 2013 Anthony Cowley
 category:            Graphics
 build-type:          Simple
 cabal-version:       >=1.10
-data-files:          etc/*, art/*
+data-files:          etc/*.frag, etc/*.vert, art/*.png
 
 executable game2d
   main-is:             Game2D.hs
