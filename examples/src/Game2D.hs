@@ -103,7 +103,7 @@ setup = do clearColor $= Color4 0.812 0.957 0.969 1
 -- The game loop makes use of a frame-tick action that provides an
 -- updated 'UI' value and the drawing function returned from 'setup'.
 loop :: IO UI -> IO ()
-loop tick = setup >>= go cam0
+loop tick = setup >>= go camera2D
   where go :: Camera GLfloat -> (AppInfo -> IO ()) -> IO ()
         go c draw = 
           do ui <- tick
@@ -114,7 +114,6 @@ loop tick = setup >>= go cam0
              if keysPressed ui ^. contains KeyEsc
              then return () -- terminate
              else go (moveCamera ui c) draw
-        cam0 = camera2D
 
 -- Open the window and kick off the loop!
 main :: IO ()

@@ -76,7 +76,7 @@ cube = do s <- loadShaderProgram ("etc"</>"poly.vert") ("etc"</>"poly.frag")
           return $ \appInfo -> withVAO vao $
             do currentProgram $= Just (program s)
                ss (cast appInfo :: CamInfo)
-               drawElements Triangles 36 UnsignedInt offset0
+               drawIndexedTris 12
   where light :: "lightDir" ::: V3 GLfloat
         light = Field
 
