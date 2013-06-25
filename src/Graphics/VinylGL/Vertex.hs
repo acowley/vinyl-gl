@@ -4,8 +4,8 @@
 -- | Utilities for working with vertex buffer objects (VBOs) filled
 -- with vertices represented as vinyl records.
 module Graphics.VinylGL.Vertex (bufferVertices, bindVertices, reloadVertices,
-                                enableVertices, enableVertices',
-                                BufferedVertices, fieldToVAD) where
+                                deleteVertices, enableVertices, enableVertices',
+                                BufferedVertices(..), fieldToVAD) where
 import Control.Applicative
 import Control.Arrow (second)
 import Data.Foldable (Foldable, foldMap)
@@ -28,21 +28,26 @@ import Graphics.VinylGL.Uniforms
 
 -- | Representation of a VBO whose type describes the vertices.
 newtype BufferedVertices (fields::[*]) = 
-  BufferedVertices { getBuffer :: GL.BufferObject }
+  BufferedVertices { getVertexBuffer :: GL.BufferObject }
 
 -- | Load vertex data into a GPU-accessible buffer.
 bufferVertices :: (Storable (PlainRec rs), BufferSource (v (PlainRec rs)))
                => v (PlainRec rs) -> IO (BufferedVertices rs)
 bufferVertices = fmap BufferedVertices . fromSource ArrayBuffer
 
+-- | Reload 'BufferedVertices' with a 'V.Vector' of new vertex data.
 reloadVertices :: Storable (PlainRec rs)
                => BufferedVertices rs -> V.Vector (PlainRec rs) -> IO ()
-reloadVertices b v = do bindBuffer ArrayBuffer $= Just (getBuffer b)
+reloadVertices b v = do bindBuffer ArrayBuffer $= Just (getVertexBuffer b)
                         replaceVector ArrayBuffer v
+
+-- | Delete the object name associated with 'BufferedVertices'.
+deleteVertices :: BufferedVertices a -> IO ()
+deleteVertices = GL.deleteObjectNames . (:[]) . getVertexBuffer
 
 -- | Bind previously-buffered vertex data.
 bindVertices :: BufferedVertices a -> IO ()
-bindVertices = (bindBuffer ArrayBuffer $=) . Just . getBuffer
+bindVertices = (bindBuffer ArrayBuffer $=) . Just . getVertexBuffer
 
 -- | Line up a shader's attribute inputs with a vertex record. This
 -- maps vertex fields to GLSL attributes on the basis of record field
