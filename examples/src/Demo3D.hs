@@ -9,7 +9,7 @@ import Graphics.Rendering.OpenGL
 import System.FilePath ((</>))
 
 import Geometry (ground, cube)
-import KeyboardInterface (moveCamera)
+import Keyboard3D (moveCamera)
 import Graphics.VinylGL
 import Window (initGL, UI(..))
 

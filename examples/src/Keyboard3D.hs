@@ -1,5 +1,5 @@
--- | Keyboard-based camera control.
-module KeyboardInterface (moveCamera) where
+-- | Keyboard-based 3D camera control.
+module Keyboard3D (moveCamera) where
 import Data.Foldable (Foldable, foldMap,foldl',fold)
 import Data.Monoid (All(..), Any(..))
 import qualified Data.Set as S
