@@ -340,6 +340,9 @@ And that's it! Since walking through working code isn't entirely
 satisfying, what would happen if we screwed up the synchronization
 between Haskell and GLSL?
 
+Safety Net
+---
+
 Suppose we had written:
 
 ```Haskell
@@ -351,7 +354,7 @@ and treated vertex position as an integer value throughout.
 This would result in a runtime error at startup:
 
 ```
-Game2Dlit: Type mismatch in vertexCoord
+Game2D: Type mismatch in vertexCoord
 ```
 
 Similarly, had we written:
@@ -366,3 +369,30 @@ typecheck our Haskell program and run our executable. However, once we
 have loaded GLSL code at runtime, and tried to enable some
 `BufferedVertices` with `enableVertices'`, `vinyl-gl` can detect
 mismatches between the Haskell and GLSL sides.
+
+Another potential mishap: had we let our names get out of sync and
+written,
+
+```Haskell
+type Pos = "vCoords" ::: V2 GLfloat
+```
+
+We would get a different error at runtime:
+
+```
+Game2D: GLSL expecting vertexCoord
+```
+
+These hypothetical errors may seem a bit contrived, but easily arise
+when composing larger applications from small pieces, as we always do
+in Haskell. The extensible records provided by `vinyl` combined with
+the `vinyl-gl` machinery let us,
+
+* Append fields to records to grow complex vertex descriptors
+* Project out simpler supertypes from more richly defined descriptors
+* Load complex vertex data into OpenGL, but only map parts of the
+data to GLSL parameters
+
+This flexibility prevents you from getting boxed in by specific record
+types, and helps you maintain good relations between your Haskell and
+GLSL code.
