@@ -182,7 +182,12 @@ eventual rendering.
 The `grassTiles` action computes a list of vertices with position
 (`Pos`) and texture coordinate (`Tex`) fields, then loads all that
 data into OpenGL. The fields used here will correspond to the inputs
-expected by our GLSL vertex shader.
+expected by our GLSL vertex shader. Data is loaded into OpenGL with
+the `bufferVertices` function that takes a list (or a
+`Data.Vector.Storable.Vector`) of `PlainRec`s and feeds the data into
+OpenGL. Note that the `BufferedVertices` type is tagged with the
+fields of the buffered vertex data. This lets us compare our buffered
+data with the expectations of our GLSL program when possible.
 
 > grassTiles :: IO (BufferedVertices [Pos,Tex])
 > grassTiles = bufferVertices . tileTex . spaceColumns $ map tile gameLevel
