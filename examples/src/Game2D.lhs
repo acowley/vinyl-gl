@@ -174,10 +174,9 @@ entire texture to the tile square.
 > tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (pos =:))
 >   where coords = map (tex =:) $ V2 <$> [0,1] <*> [0,1]
 
-We compute all the grassy tiles from our `gameLevel` data
-structure. We compute all these tiles together because they share the
-same texture. By grouping our tiles by their textures, we can simplify
-eventual rendering.
+We compute all the grassy tiles from our `gameLevel` data structure
+together because they share the same texture. By grouping our tiles by
+their textures, we can simplify eventual rendering.
 
 The `grassTiles` action computes a list of vertices with position
 (`Pos`) and texture coordinate (`Tex`) fields, then loads all that
@@ -284,7 +283,7 @@ input. We do this by giving OpenGL offsets and strides into our vertex
 buffer that define how to pick out each field of each vertex. The
 `vinyl-gl` library handles all of this automatically. The convention
 that drives the entire arrangement is that the symbolic name attached
-to each field is identicaly to the corresponding GLSL input's name.
+to each field is identical to the corresponding GLSL input's name.
 
 >      dirtVAO <- makeVAO $ do enableVertices' s dirtVerts
 >                              bindVertices dirtVerts
@@ -313,7 +312,7 @@ renderer.
 >            background
 
 The game loop makes use of a frame-tick action that provides an
-updated 'UI' value and the drawing function returned from 'setup'.
+updated `UI` value and the drawing function returned from `setup`.
 
 > loop :: IO UI -> IO ()
 > loop tick = setup >>= go camera2D
@@ -393,6 +392,6 @@ the `vinyl-gl` machinery let us,
 * Load complex vertex data into OpenGL, but only map parts of the
 data to GLSL parameters
 
-This flexibility prevents you from getting boxed in by specific record
-types, and helps you maintain good relations between your Haskell and
-GLSL code.
+This flexibility helps the programmer avoid getting boxed in by
+specific record types while maintaining good relations between Haskell
+and GLSL code.
