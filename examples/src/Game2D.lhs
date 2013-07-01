@@ -140,6 +140,17 @@ gives us the four vertices of a square for a tile.
 > tile :: Int -> [V2 GLfloat]
 > tile h = let h' = fromIntegral h / 10 in V2 <$> [0,0.2] <*> [h', h' - 0.2]
 
+The `tile` function can be used to build a column of tiles whose left
+edge has an X coordinate of 0. We now lay these columns out
+side-by-side extending from a leftmost edge at the Y axis. Each
+successive column is placed farther along the positive X axis.
+
+> spaceColumns :: [[V2 GLfloat]] -> [[V2 GLfloat]]
+> spaceColumns = zipWith (map . (_x +~)) [0, 0.2 ..]
+
+Building a Bridge to GLSL
+---
+
 The 2D vertices we produce will consist of not only 2D positions, but
 also texture coordinates that define how our tile images are mapped to
 2D tiles. Having this `Tex` field means that we have the flexibility
@@ -156,15 +167,6 @@ up with the `vertexCoord` our vertex shader expects as input.
 > 
 > tex :: Tex
 > tex = Field
-
-The `tile` function can be used to build a column of tiles whose left
-edge has an X coordinate of 0. We now lay these columns out
-side-by-side extending from a leftmost edge at the Y axis. Each
-successive column is placed farther along the positive X axis.
-
-> spaceColumns :: [[V2 GLfloat]] -> [[V2 GLfloat]]
-> spaceColumns = zipWith (map . (_x +~)) [0, 0.2 ..]
-
 
 We're not going to do anything fancy with texture coordinates for now,
 so we will simply assign each vertex texture coordinates that map the
@@ -216,6 +218,9 @@ set each to use nearest-neighbor filtering.
 >                    return img
 >         texFilter = do textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
 >                        texture2DWrap $= (Repeated, ClampToEdge)
+
+Ready to Renderer
+---
 
 Finally, we can define how to draw our game world! We will make use of
 the geometry and texture loading pieces defined above to produce a
@@ -299,6 +304,9 @@ to each field is identical to the corresponding GLSL input's name.
 >         texSampler = Field :: "tex" ::: GLint
 >         inds = take (sum $ map (*6) gameLevel) $
 >                foldMap (flip map [0,1,2,2,1,3] . (+)) [0,4..]
+
+The Window and Main Loop
+---
 
 Our application is driven by a single initialization function. We set
 the color to which each frame will be cleared, turn on alpha blending,
