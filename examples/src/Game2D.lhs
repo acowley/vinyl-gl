@@ -395,3 +395,19 @@ data to GLSL parameters
 This flexibility helps the programmer avoid getting boxed in by
 specific record types while maintaining good relations between Haskell
 and GLSL code.
+
+Short and Sweet
+---
+
+To bring things full circle, here is a version of the code from the
+older [article](http://www.arcadianvisions.com/blog/?p=224) linked at
+the top compared to a
+[version](https://github.com/acowley/vinyl-gl/blob/master/examples/src/example1-vinyl.hs)
+ported to use `vinyl-gl` and the newest `GLUtil`. We have eliminated
+nearly *half* the code by reducing OpenGL boilerplate (GLSL &harr;
+Haskell synchronization, `VertexArrayDescriptor` specifications,
+etc.), and better encapsulating rendering actions.
+
+(Old version on the left, new version on the right.)
+
+[![](../images/vinyl-gl-comparison.png "vinyl-gl code comparison")](../images/vinyl-gl-comparison.pdf)
