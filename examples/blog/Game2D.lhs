@@ -16,7 +16,9 @@ in the [vinyl-gl repository](https://github.com/acowley/vinyl-gl). I
 think (hope) the
 [examples](https://github.com/acowley/vinyl-gl/tree/master/examples)
 directory there is a useful starting point to see how this library may
-be used.
+be used. If you want to skip the examples and just get coding, the
+library is [available on
+hackage](http://hackage.haskell.org/package/vinyl-gl).
 
 What's the Problem?
 ---
@@ -407,9 +409,10 @@ and GLSL code.
 Short and Sweet
 ---
 
-To bring things full circle, here is a version of the code from the
-older [article](http://www.arcadianvisions.com/blog/?p=224) linked at
-the top compared to a
+To bring things full circle, here is a version of the
+[code](https://github.com/acowley/GLUtil/blob/master/examples/example1.hs)
+from the older [article](http://www.arcadianvisions.com/blog/?p=224)
+linked at the top compared to a
 [version](https://github.com/acowley/vinyl-gl/blob/master/examples/src/example1-vinyl.hs)
 ported to use `vinyl-gl` and the newest `GLUtil`. We have eliminated
 nearly *half* the code by reducing OpenGL boilerplate (GLSL &harr;
