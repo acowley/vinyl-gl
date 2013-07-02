@@ -11,6 +11,10 @@ category:            Graphics
 build-type:          Simple
 cabal-version:       >=1.10
 
+source-repository head
+  type:     git
+  location: http://github.com/acowley/vinyl-gl.git
+
 library
   exposed-modules:     Data.Vinyl.Reflect, 
                        Graphics.VinylGL, 
@@ -18,7 +22,7 @@ library
                        Graphics.VinylGL.Vertex
   -- other-modules:       
   build-depends:       base >= 4.6, transformers >= 0.3, vinyl >= 0.1.3, 
-                       containers >= 0.5, GLUtil >= 0.6.2, OpenGL >= 2.8, 
-                       tagged >= 0.4, vector >= 0.10, linear >= 1.1
+                       containers >= 0.5, GLUtil >= 0.6.4, OpenGL >= 2.8, 
+                       tagged >= 0.4, vector >= 0.10, linear >= 1.1.4
   hs-source-dirs:      src
   default-language:    Haskell2010
