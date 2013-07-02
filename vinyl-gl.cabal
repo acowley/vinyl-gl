@@ -1,15 +1,20 @@
-name:                vinyl-gl
-version:             0.1.0.0
-synopsis:            Utilities for working with OpenGL's GLSL shading language and vinyl records.
--- description:         
-license:             BSD3
-license-file:        LICENSE
-author:              Anthony Cowley
-maintainer:          acowley@gmail.com
-copyright:           Copyright (C) 2013 Anthony Cowley
-category:            Graphics
-build-type:          Simple
-cabal-version:       >=1.10
+name:          vinyl-gl
+version:       0.1.0.0
+synopsis:      Utilities for working with OpenGL's GLSL shading language and vinyl records.
+description:   Using "Data.Vinyl" records (similar in spirit to @HList@)
+               to carry GLSL uniform parameters and vertex data enables
+               library code to reflect over the types of the data to
+               facilitate interaction between Haskell and GLSL. See the
+               @examples@ directory in the repository for more
+               information.
+license:       BSD3
+license-file:  LICENSE
+author:        Anthony Cowley
+maintainer:    acowley@gmail.com
+copyright:     Copyright (C) 2013 Anthony Cowley
+category:      Graphics
+build-type:    Simple
+cabal-version: >=1.10
 
 source-repository head
   type:     git
