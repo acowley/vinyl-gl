@@ -221,7 +221,7 @@ set each to use nearest-neighbor filtering.
 >         texFilter = do textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
 >                        texture2DWrap $= (Repeated, ClampToEdge)
 
-Ready to Renderer
+Ready to Render
 ---
 
 Finally, we can define how to draw our game world! We will make use of
