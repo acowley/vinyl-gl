@@ -70,7 +70,7 @@ loadTextures = fmap (either error id . sequence) . mapM aux
 background :: IO (AppInfo -> IO ())
 background = 
   do [grass,dirt] <- loadTextures [ "ground.png", "ground_dirt.png" ]
-     s <- loadShaderProgram ("etc"</>"game2d.vert") ("etc"</>"game2d.frag")
+     s <- simpleShaderProgram ("etc"</>"game2d.vert") ("etc"</>"game2d.frag")
      setUniforms s (texSampler =: 0)
      grassVerts <- grassTiles
      eb <- bufferIndices inds

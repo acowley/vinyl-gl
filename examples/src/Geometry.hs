@@ -3,7 +3,6 @@ module Geometry where
 import Control.Applicative
 import Data.Foldable (fold, foldMap)
 import Data.Vinyl
-import Data.Word (Word32)
 import Graphics.GLUtil
 import Graphics.Rendering.OpenGL hiding (normal, normalize, light, Normal, Color)
 import Linear
@@ -63,7 +62,7 @@ inds = take 36 $ foldMap (flip map faceInds . (+)) [0,4..]
 type CamInfo = PlainRec ["cam" ::: M44 GLfloat, "proj" ::: M44 GLfloat]
 
 cube :: (i <: CamInfo) => IO (i -> IO ())
-cube = do s <- loadShaderProgram ("etc"</>"poly.vert") ("etc"</>"poly.frag")
+cube = do s <- simpleShaderProgram ("etc"</>"poly.vert") ("etc"</>"poly.frag")
           vb <- bufferVertices (map colorize pts)
           eb <- makeBuffer ElementArrayBuffer inds
           vao <- makeVAO $
@@ -89,7 +88,7 @@ type ProjInfo = PlainRec '["proj" ::: M44 GLfloat]
 ground :: (i <: ProjInfo) => IO (i -> IO ())
 ground = do Right t <- readTexture $ "art"</>"Wood_floor_boards.png"
             generateMipmap' Texture2D
-            s <- loadShaderProgram ("etc"</>"ground.vert") ("etc"</>"ground.frag")
+            s <- simpleShaderProgram ("etc"</>"ground.vert") ("etc"</>"ground.frag")
             vb <- bufferVertices . map ((pos =:) . scale3D) $
                   V2 <$> [-1,1] <*> [-1,1]
             vao <- makeVAO $

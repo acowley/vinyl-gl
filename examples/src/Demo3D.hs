@@ -23,7 +23,7 @@ tex = Field
 
 logo :: IO (IO ())
 logo = do Right t <- readTexture ("art"</>"Haskell-Logo.png")
-          s <- loadShaderProgram ("etc"</>"logo.vert") ("etc"</>"logo.frag")
+          s <- simpleShaderProgram ("etc"</>"logo.vert") ("etc"</>"logo.frag")
           vb <- bufferVertices $ map (pos =:) [0, V2 0.25 0, 0.25, V2 0 0.25]
           vao <- makeVAO $
                  do currentProgram $= Just (program s)
