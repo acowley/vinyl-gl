@@ -7,7 +7,7 @@
 -- record corresponds to a uniform parameter of the given shader
 -- program, and that the types all agree.
 module Graphics.VinylGL.Uniforms (setAllUniforms, setSomeUniforms, setUniforms,
-                                  HasFieldGLTypes(..)) where
+                                  HasFieldGLTypes(..), SetUniformFields) where
 import Control.Applicative ((<$>))
 import Data.Foldable (traverse_)
 import Data.Functor.Identity
