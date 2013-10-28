@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds, TypeOperators #-}
 import Control.Applicative
+import Control.Lens ((^.), contains)
 import Data.Vinyl
 import Graphics.UI.GLFW (Key(KeyEsc))
 import Linear (V2(..), V3(..), M44, (!*!))

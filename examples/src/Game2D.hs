@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds, TypeOperators #-}
 import Control.Applicative
+import Control.Lens ((+~), (^.), contains)
 import Data.Foldable (foldMap, traverse_)
 import Data.Vinyl
 import Graphics.GLUtil

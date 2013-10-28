@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds, FlexibleContexts, TypeOperators #-}
 module Geometry where
 import Control.Applicative
+import Control.Lens (view)
 import Data.Foldable (fold, foldMap)
 import Data.Vinyl
 import Graphics.GLUtil
