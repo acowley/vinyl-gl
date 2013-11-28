@@ -5,6 +5,7 @@
 -- with vertices represented as vinyl records.
 module Graphics.VinylGL.Vertex (bufferVertices, bindVertices, reloadVertices,
                                 deleteVertices, enableVertices, enableVertices',
+                                enableVertexFields,
                                 BufferedVertices(..), fieldToVAD) where
 import Control.Applicative
 import Control.Arrow (second)
@@ -18,7 +19,7 @@ import Data.Vinyl ((:::)(..), PlainRec, Implicit(..), Elem)
 import Foreign.Ptr (plusPtr)
 import Foreign.Storable
 import GHC.TypeLits (Sing, SingI(..), fromSing)
-import Graphics.GLUtil hiding (Elem)
+import Graphics.GLUtil hiding (Elem, throwError)
 import Graphics.Rendering.OpenGL (VertexArrayDescriptor(..), bindBuffer,
                                   ($=), BufferTarget(..))
 import qualified Graphics.Rendering.OpenGL as GL
@@ -83,6 +84,32 @@ fieldToVAD _ _ = GL.VertexArrayDescriptor dim
 -- Constraint alias capturing the requirements of a vertex type.
 type ViableVertex t = (HasFieldNames t, HasFieldSizes t, HasFieldDims t,
                        HasFieldGLTypes t, Storable t)
+
+-- | Bind some of a shader's attribute inputs to a vertex record. This
+-- is useful when the inputs of a shader are split across multiple
+-- arrays.
+enableVertexFields :: forall p rs. (ViableVertex (PlainRec rs))
+                   => ShaderProgram -> p rs -> IO ()
+enableVertexFields s _ = enableSomeAttribs s (Proxy::Proxy (PlainRec rs)) >>=
+                         maybe (return ()) error
+
+-- | Do not raise an error is some of a shader's inputs are not bound
+-- by a vertex record.
+enableSomeAttribs :: forall v. ViableVertex v
+                  => ShaderProgram -> Proxy v -> IO (Maybe String)
+enableSomeAttribs s p = go $ fieldDescriptors (undefined::v)
+  where go [] = return Nothing
+        go (fd:fds) = 
+          let n = fieldName fd
+              shaderAttribs = attribs s
+          in case M.lookup n shaderAttribs of
+               Nothing -> return (Just $ "Unexpected attribute " ++ n)
+               Just (_,t)
+                 | fieldType fd == t -> do enableAttrib s n
+                                           setAttrib s n GL.ToFloat $
+                                             descriptorVAD p fd
+                                           go fds
+                 | otherwise -> return . Just $ "Type mismatch in " ++ n
 
 enableAttribs :: forall v. ViableVertex v
               => ShaderProgram -> Proxy v -> IO (Maybe String)
