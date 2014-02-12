@@ -1,6 +1,6 @@
 {-# LANGUAGE DataKinds, ScopedTypeVariables, TypeOperators, GADTs, BangPatterns,
              FlexibleInstances, FlexibleContexts, KindSignatures, RankNTypes,
-             ConstraintKinds #-}
+             ConstraintKinds, CPP #-}
 -- | Utilities for working with vertex buffer objects (VBOs) filled
 -- with vertices represented as vinyl records.
 module Graphics.VinylGL.Vertex (bufferVertices, bindVertices, reloadVertices,
@@ -18,7 +18,7 @@ import qualified Data.Vector.Storable as V
 import Data.Vinyl ((:::)(..), PlainRec, Implicit(..), Elem)
 import Foreign.Ptr (plusPtr)
 import Foreign.Storable
-import GHC.TypeLits (Sing, SingI(..), fromSing)
+import GHC.TypeLits
 import Graphics.GLUtil hiding (Elem, throwError)
 import Graphics.Rendering.OpenGL (VertexArrayDescriptor(..), bindBuffer,
                                   ($=), BufferTarget(..))
@@ -70,7 +70,13 @@ enableVertices' s _ = enableAttribs s (Proxy::Proxy (PlainRec rs)) >>=
 fieldToVAD :: forall sy v a r rs. 
               (r ~ (sy ::: v a), HasFieldNames (PlainRec rs), 
                HasFieldSizes (PlainRec rs), HasGLType a, Storable (PlainRec rs),
-               Num (v a), SingI sy, Foldable v, Implicit (Elem r rs)) =>
+               Num (v a),
+#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 707
+               KnownSymbol sy,
+#else
+               SingI sy,
+#endif
+               Foldable v, Implicit (Elem r rs)) =>
               r -> Proxy (PlainRec rs) -> GL.VertexArrayDescriptor a
 fieldToVAD _ _ = GL.VertexArrayDescriptor dim
                                           (glType (undefined::a))
@@ -79,7 +85,11 @@ fieldToVAD _ _ = GL.VertexArrayDescriptor dim
                                           (offset0 `plusPtr` offset)
   where dim = getSum $ foldMap (const (Sum 1)) (0::v a)
         Just offset = lookup n $ namesAndOffsets (undefined::PlainRec rs)
+#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 707
+        n = symbolVal (Proxy::Proxy sy)
+#else
         n = fromSing (sing::Sing sy)
+#endif
 
 -- Constraint alias capturing the requirements of a vertex type.
 type ViableVertex t = (HasFieldNames t, HasFieldSizes t, HasFieldDims t,
