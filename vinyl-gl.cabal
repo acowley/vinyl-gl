@@ -1,5 +1,5 @@
 name:          vinyl-gl
-version:       0.1.1
+version:       0.1.2
 synopsis:      Utilities for working with OpenGL's GLSL shading language and vinyl records.
 description:   Using "Data.Vinyl" records (similar in spirit to @HList@)
                to carry GLSL uniform parameters and vertex data enables
