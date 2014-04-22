@@ -10,7 +10,7 @@ module Graphics.VinylGL.Uniforms (setAllUniforms, setSomeUniforms, setUniforms,
                                   HasFieldGLTypes(..), SetUniformFields) where
 import Control.Applicative ((<$>))
 import Data.Foldable (traverse_)
-import Data.Functor.Identity
+import Data.Vinyl.Idiom.Identity
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
 import qualified Data.Set as S

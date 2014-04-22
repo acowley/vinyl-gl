@@ -3,7 +3,7 @@
 -- | Reflection utilities for vinyl records.
 module Data.Vinyl.Reflect where
 import Data.Foldable (Foldable, foldMap)
-import Data.Functor.Identity
+import Data.Vinyl.Idiom.Identity
 import Data.Monoid (Sum(..))
 import Data.Vinyl (Rec, PlainRec, (:::))
 import Foreign.Storable (Storable(sizeOf))
