@@ -3,10 +3,11 @@ import Control.Applicative
 import Control.Lens ((+~), (^.), contains)
 import Data.Foldable (foldMap, traverse_)
 import Data.Vinyl
+import Data.Vinyl.Universe ((:::), SField(..))
 import Graphics.GLUtil
 import Graphics.GLUtil.Camera2D
 import Graphics.Rendering.OpenGL
-import Graphics.UI.GLFW (Key(KeyEsc))
+import Graphics.UI.GLFW (Key(Key'Escape))
 import Graphics.VinylGL
 import Linear (V2(..), _x, M33)
 import System.FilePath ((</>))
@@ -14,7 +15,7 @@ import Keyboard2D (moveCamera)
 import Window (initGL, UI(..))
 
 -- A record each drawing function will receive.
-type AppInfo = PlainRec '["cam" ::: M33 GLfloat]
+type AppInfo = PlainFieldRec '["cam" ::: M33 GLfloat]
 
 -- The ground level for each column in our map. Heights go up from 0
 -- to 10.
@@ -30,11 +31,11 @@ tile h = let h' = fromIntegral h / 10 in V2 <$> [0,0.2] <*> [h', h' - 0.2]
 type Pos = "vertexCoord" ::: V2 GLfloat
 type Tex = "texCoord"    ::: V2 GLfloat
 
-pos :: Pos
-pos = Field
+pos :: SField Pos
+pos = SField
 
-tex :: Tex
-tex = Field
+tex :: SField Tex
+tex = SField
 
 -- Each element of the outer list is a list of the vertices that make
 -- up a column. Push each successive column farther along the X axis.
@@ -42,7 +43,7 @@ spaceColumns :: [[V2 GLfloat]] -> [[V2 GLfloat]]
 spaceColumns = zipWith (map . (_x +~)) [0, 0.2 ..]
 
 -- Compute a textured vertex record for each input vertex.
-tileTex :: [[V2 GLfloat]] -> [PlainRec [Pos,Tex]]
+tileTex :: [[V2 GLfloat]] -> [PlainFieldRec [Pos,Tex]]
 tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (pos =:))
   where coords = map (tex =:) $ V2 <$> [0,1] <*> [0,1]
 
@@ -72,6 +73,7 @@ background :: IO (AppInfo -> IO ())
 background = 
   do [grass,dirt] <- loadTextures [ "ground.png", "ground_dirt.png" ]
      s <- simpleShaderProgram ("etc"</>"game2d.vert") ("etc"</>"game2d.frag")
+     putStrLn "Loaded shaders"
      setUniforms s (texSampler =: 0)
      grassVerts <- grassTiles
      eb <- bufferIndices inds
@@ -90,7 +92,7 @@ background =
                          drawIndexedTris numDirtTris
   where numGrassTris = fromIntegral $ 2 * length gameLevel
         numDirtTris = fromIntegral . sum $ map (*2) gameLevel
-        texSampler = Field :: "tex" ::: GLint
+        texSampler = SField :: SField ("tex" ::: GLint)
         inds = take (sum $ map (*6) gameLevel) $
                foldMap (flip map [0,1,2,2,1,3] . (+)) [0,4..]
 
@@ -110,9 +112,9 @@ loop tick = setup >>= go camera2D
           do ui <- tick
              clear [ColorBuffer, DepthBuffer]
              let mCam = camMatrix c
-                 info = Field =: mCam
+                 info = SField =: mCam
              draw info
-             if keysPressed ui ^. contains KeyEsc
+             if keysPressed ui ^. contains Key'Escape
              then return () -- terminate
              else go (moveCamera ui c) draw
 

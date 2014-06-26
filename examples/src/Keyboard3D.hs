@@ -28,21 +28,21 @@ cnfEndo p del = go
 -- | Translate and rotate a 'Camera' based on 'UI' input.
 moveCamera :: (Conjugate a, Epsilon a, RealFloat a) => UI -> Camera a -> Camera a
 moveCamera ui = cnfEndo S.member S.delete 
-                  [ ([shift, ctrl, [KeyLeft]], roll na)
-                  , ([shift, ctrl, [KeyRight]], roll pa)
-                  , ([shift, [KeyLeft]], pan pa)
-                  , ([shift, [KeyRight]], pan na)
-                  , ([shift, [KeyUp]], tilt pa)
-                  , ([shift, [KeyDown]], tilt na) 
-                  , ([[KeyLeft]], dolly (V3 np 0 0))
-                  , ([[KeyRight]], dolly (V3 pp 0 0))
-                  , ([[KeyUp]], dolly (V3 0 0 np))
-                  , ([[KeyDown]], dolly (V3 0 0 pp))
-                  , ([[KeyPageup]], dolly (V3 0 pp 0))
-                  , ([[KeyPagedown]], dolly (V3 0 np 0)) ]
+                  [ ([shift, ctrl, [Key'Left]], roll na)
+                  , ([shift, ctrl, [Key'Right]], roll pa)
+                  , ([shift, [Key'Left]], pan pa)
+                  , ([shift, [Key'Right]], pan na)
+                  , ([shift, [Key'Up]], tilt pa)
+                  , ([shift, [Key'Down]], tilt na) 
+                  , ([[Key'Left]], dolly (V3 np 0 0))
+                  , ([[Key'Right]], dolly (V3 pp 0 0))
+                  , ([[Key'Up]], dolly (V3 0 0 np))
+                  , ([[Key'Down]], dolly (V3 0 0 pp))
+                  , ([[Key'PageUp]], dolly (V3 0 pp 0))
+                  , ([[Key'PageDown]], dolly (V3 0 np 0)) ]
                   (keysPressed ui)
-  where shift = [KeyLeftShift, KeyRightShift]
-        ctrl = [KeyLeftCtrl, KeyRightCtrl]
+  where shift = [Key'LeftShift, Key'RightShift]
+        ctrl = [Key'LeftControl, Key'RightControl]
 
         -- Normalize speeds to 60Hz update
         timeScale = realToFrac $ timeStep ui * 60 

@@ -28,14 +28,14 @@ cnfEndo p del = go
 -- | Translate and rotate a 'Camera' based on 'UI' input.
 moveCamera :: (Conjugate a, Epsilon a, RealFloat a) => UI -> Camera a -> Camera a
 moveCamera ui = cnfEndo S.member S.delete 
-                  [ ([shift, [KeyLeft]], roll na)
-                  , ([shift, [KeyRight]], roll pa)
-                  , ([[KeyLeft]], track (V2 np 0))
-                  , ([[KeyRight]], track (V2 pp 0))
-                  , ([[KeyUp]], track (V2 0 pp))
-                  , ([[KeyDown]], track (V2 0 np)) ]
+                  [ ([shift, [Key'Left]], roll na)
+                  , ([shift, [Key'Right]], roll pa)
+                  , ([[Key'Left]], track (V2 np 0))
+                  , ([[Key'Right]], track (V2 pp 0))
+                  , ([[Key'Up]], track (V2 0 pp))
+                  , ([[Key'Down]], track (V2 0 np)) ]
                   (keysPressed ui)
-  where shift = [KeyLeftShift, KeyRightShift]
+  where shift = [Key'LeftShift, Key'RightShift]
 
         -- Normalize speeds to 60Hz update
         timeScale = realToFrac $ timeStep ui * 60 

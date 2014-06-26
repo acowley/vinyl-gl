@@ -4,6 +4,7 @@ import Control.Applicative
 import Control.Lens (view)
 import Data.Foldable (fold, foldMap)
 import Data.Vinyl
+import Data.Vinyl.Universe ((:::), SField(..))
 import Graphics.GLUtil
 import Graphics.Rendering.OpenGL hiding (normal, normalize, light, Normal, Color)
 import Linear
@@ -14,14 +15,14 @@ type Pos    = "vertexPos"    ::: V3 GLfloat
 type Normal = "vertexNormal" ::: V3 GLfloat
 type Color  = "vertexColor"  ::: V3 GLfloat
 
-pos :: Pos
-pos = Field
+pos :: SField Pos
+pos = SField
 
-normal :: Normal
-normal = Field
+normal :: SField Normal
+normal = SField
 
-col :: Color
-col = Field
+col :: SField Color
+col = SField
 
 -- The 2D corners of a square.
 square :: [V2 GLfloat]
@@ -37,7 +38,7 @@ top    = map (\(V2 x z) -> V3 x 1 (-z)) square
 bottom = map (\(V2 x z) -> V3 x (-1) z) square
 
 -- Cube face vertices paired with normal vectors.
-pts :: [PlainRec [Pos,Normal]]
+pts :: [PlainFieldRec [Pos,Normal]]
 pts = fold [ map (setNorm z)    front
            , map (setNorm $ -z) back
            , map (setNorm $ -x) left
@@ -48,7 +49,7 @@ pts = fold [ map (setNorm z)    front
         setNorm v p = (pos =: p <+> normal =: v)
 
 -- Color the front vertices a dark blue, the back a light beige.
-colorize :: PlainRec [Pos,Normal] -> PlainRec [Pos,Normal,Color]
+colorize :: PlainFieldRec [Pos,Normal] -> PlainFieldRec [Pos,Normal,Color]
 colorize pt = pt <+> col =: c
   where c | view (rLens pos._z) pt > 0 = V3 8.235294e-2 0.20392157 0.3137255
           | otherwise = V3 0.95686275 0.8392157 0.7372549
@@ -60,9 +61,9 @@ inds = take 36 $ foldMap (flip map faceInds . (+)) [0,4..]
 
 -- For rendering a cube, we'll need a ModelView matrix, and a
 -- ProjectionModelView matrix.
-type CamInfo = PlainRec ["cam" ::: M44 GLfloat, "proj" ::: M44 GLfloat]
+type CamInfo = '["cam" ::: M44 GLfloat, "proj" ::: M44 GLfloat]
 
-cube :: (i <: CamInfo) => IO (i -> IO ())
+cube :: (i <: CamInfo) => IO (PlainFieldRec i -> IO ())
 cube = do s <- simpleShaderProgram ("etc"</>"poly.vert") ("etc"</>"poly.frag")
           vb <- bufferVertices (map colorize pts)
           eb <- makeBuffer ElementArrayBuffer inds
@@ -75,18 +76,18 @@ cube = do s <- simpleShaderProgram ("etc"</>"poly.vert") ("etc"</>"poly.frag")
           let ss = setUniforms s
           return $ \appInfo -> withVAO vao $
             do currentProgram $= Just (program s)
-               ss (cast appInfo :: CamInfo)
+               ss (cast appInfo :: PlainFieldRec CamInfo)
                drawIndexedTris 12
-  where light :: "lightDir" ::: V3 GLfloat
-        light = Field
+  where light :: SField ("lightDir" ::: V3 GLfloat)
+        light = SField
 
 -- We don't use normal vectors with the ground, so we just need a
 -- single composite projection matrix.
-type ProjInfo = PlainRec '["proj" ::: M44 GLfloat]
+type ProjInfo = '["proj" ::: M44 GLfloat]
 
 -- Ground texture from:
 -- http://www.texturehd.com/data/media/21/Wood_floor_boards.jpg
-ground :: (i <: ProjInfo) => IO (i -> IO ())
+ground :: (i <: ProjInfo) => IO (PlainFieldRec i -> IO ())
 ground = do Right t <- readTexture $ "art"</>"Wood_floor_boards.png"
             generateMipmap' Texture2D
             s <- simpleShaderProgram ("etc"</>"ground.vert") ("etc"</>"ground.frag")
@@ -104,9 +105,9 @@ ground = do Right t <- readTexture $ "art"</>"Wood_floor_boards.png"
             let ss = setUniforms s
             return $ \appInfo -> withVAO vao $
               do currentProgram $= Just (program s)
-                 ss (cast appInfo :: ProjInfo)
+                 ss (cast appInfo :: PlainFieldRec ProjInfo)
                  withTextures2D [t] $ drawArrays TriangleStrip 0 4
   where scale3D :: V2 GLfloat -> V3 GLfloat
         scale3D = (\(V2 x z) -> V3 x (-1.01) z) . (3*^)
-        tex :: "tex" ::: GLint
-        tex = Field
+        tex :: SField ("tex" ::: GLint)
+        tex = SField

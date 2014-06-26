@@ -15,7 +15,8 @@ import qualified Data.Map as M
 import Data.Monoid (Sum(..))
 import Data.Proxy (Proxy(..))
 import qualified Data.Vector.Storable as V
-import Data.Vinyl ((:::)(..), PlainRec, Implicit(..), Elem)
+import Data.Vinyl (PlainFieldRec, Implicit(..), Elem)
+import Data.Vinyl.Universe((:::))
 import Foreign.Ptr (plusPtr)
 import Foreign.Storable
 import GHC.TypeLits
@@ -32,13 +33,14 @@ newtype BufferedVertices (fields::[*]) =
   BufferedVertices { getVertexBuffer :: GL.BufferObject }
 
 -- | Load vertex data into a GPU-accessible buffer.
-bufferVertices :: (Storable (PlainRec rs), BufferSource (v (PlainRec rs)))
-               => v (PlainRec rs) -> IO (BufferedVertices rs)
+bufferVertices :: (Storable (PlainFieldRec rs),
+                   BufferSource (v (PlainFieldRec rs)))
+               => v (PlainFieldRec rs) -> IO (BufferedVertices rs)
 bufferVertices = fmap BufferedVertices . fromSource ArrayBuffer
 
 -- | Reload 'BufferedVertices' with a 'V.Vector' of new vertex data.
-reloadVertices :: Storable (PlainRec rs)
-               => BufferedVertices rs -> V.Vector (PlainRec rs) -> IO ()
+reloadVertices :: Storable (PlainFieldRec rs)
+               => BufferedVertices rs -> V.Vector (PlainFieldRec rs) -> IO ()
 reloadVertices b v = do bindBuffer ArrayBuffer $= Just (getVertexBuffer b)
                         replaceVector ArrayBuffer v
 
@@ -53,38 +55,39 @@ bindVertices = (bindBuffer ArrayBuffer $=) . Just . getVertexBuffer
 -- | Line up a shader's attribute inputs with a vertex record. This
 -- maps vertex fields to GLSL attributes on the basis of record field
 -- names on the Haskell side, and variable names on the GLSL side.
-enableVertices :: forall f rs. ViableVertex (PlainRec rs)
+enableVertices :: forall f rs. ViableVertex (PlainFieldRec rs)
                => ShaderProgram -> f rs -> IO (Maybe String)
-enableVertices s _ = enableAttribs s (Proxy::Proxy (PlainRec rs))
+enableVertices s _ = enableAttribs s (Proxy::Proxy (PlainFieldRec rs))
 
 -- | Behaves like 'enableVertices', but raises an exception if the
 -- supplied vertex record does not include a field required by the
 -- shader.
-enableVertices' :: forall f rs. ViableVertex (PlainRec rs)
+enableVertices' :: forall f rs. ViableVertex (PlainFieldRec rs)
                => ShaderProgram -> f rs -> IO ()
-enableVertices' s _ = enableAttribs s (Proxy::Proxy (PlainRec rs)) >>=
+enableVertices' s _ = enableAttribs s (Proxy::Proxy (PlainFieldRec rs)) >>=
                       maybe (return ()) error
 
 -- | Produce a 'GL.VertexArrayDescriptor' for a particular field of a
 -- vertex record.
-fieldToVAD :: forall sy v a r rs. 
-              (r ~ (sy ::: v a), HasFieldNames (PlainRec rs), 
-               HasFieldSizes (PlainRec rs), HasGLType a, Storable (PlainRec rs),
-               Num (v a),
+fieldToVAD :: forall sy v a r rs field proxy.
+              (r ~ (sy ::: v a), HasFieldNames (PlainFieldRec rs), 
+               HasFieldSizes (PlainFieldRec rs), HasGLType a,
+               Storable (PlainFieldRec rs), Num (v a),
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 707
                KnownSymbol sy,
 #else
                SingI sy,
 #endif
                Foldable v, Implicit (Elem r rs)) =>
-              r -> Proxy (PlainRec rs) -> GL.VertexArrayDescriptor a
+              field r -> proxy (PlainFieldRec rs) -> GL.VertexArrayDescriptor a
 fieldToVAD _ _ = GL.VertexArrayDescriptor dim
                                           (glType (undefined::a))
-                                          (fromIntegral $
-                                           sizeOf (undefined::PlainRec rs))
+                                          (fromIntegral sz)
                                           (offset0 `plusPtr` offset)
-  where dim = getSum $ foldMap (const (Sum 1)) (0::v a)
-        Just offset = lookup n $ namesAndOffsets (undefined::PlainRec rs)
+  where sz = sizeOf (undefined::PlainFieldRec rs)
+        dim = getSum $ foldMap (const (Sum 1)) (0::v a)
+        Just offset = lookup n $
+                      namesAndOffsets (undefined::PlainFieldRec rs)
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 707
         n = symbolVal (Proxy::Proxy sy)
 #else
@@ -98,10 +101,10 @@ type ViableVertex t = (HasFieldNames t, HasFieldSizes t, HasFieldDims t,
 -- | Bind some of a shader's attribute inputs to a vertex record. This
 -- is useful when the inputs of a shader are split across multiple
 -- arrays.
-enableVertexFields :: forall p rs. (ViableVertex (PlainRec rs))
+enableVertexFields :: forall p rs. (ViableVertex (PlainFieldRec rs))
                    => ShaderProgram -> p rs -> IO ()
-enableVertexFields s _ = enableSomeAttribs s (Proxy::Proxy (PlainRec rs)) >>=
-                         maybe (return ()) error
+enableVertexFields s _ = enableSomeAttribs s p >>= maybe (return ()) error
+  where p = Proxy :: Proxy (PlainFieldRec rs)
 
 -- | Do not raise an error is some of a shader's inputs are not bound
 -- by a vertex record.

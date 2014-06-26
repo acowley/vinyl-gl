@@ -1,6 +1,7 @@
-{-# LANGUAGE DataKinds, TypeOperators #-}
+{-# LANGUAGE DataKinds, KindSignatures, TypeOperators #-}
 import Data.Proxy
 import Data.Vinyl
+import Data.Vinyl.Universe
 import Data.Word
 import Foreign.Ptr (nullPtr, plusPtr)
 import Graphics.Rendering.OpenGL (DataType(..), GLfloat,
@@ -14,10 +15,10 @@ import Test.HUnit (Test(..), (~=?))
 type Pos = "vpos" ::: V3 GLfloat
 type Tag = "tagByte" ::: V1 Word8
 
-tag :: Tag
-tag = Field
+tag :: SField Tag
+tag = SField
 
-type Vertex = PlainRec [Pos, Tag]
+type Vertex = PlainFieldRec [Pos, Tag]
 
 --testVad :: VertexArrayDescriptor Word8
 testVad :: Test

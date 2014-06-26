@@ -1,7 +1,10 @@
 -- | Open a window and get an OpenGL context.
-module Window (UI(..), initGL, terminate, closeWindow) where
+module Window (UI(..), initGL, terminate) where
+import Prelude hiding (init)
 import Control.Applicative
+import Control.Monad (when)
 import Data.IORef
+import Data.Maybe (isNothing)
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Time.Clock
@@ -17,25 +20,26 @@ data UI = UI { timeStep       :: Double
              -- ^ All keys currently pressed
              , buttonsPressed :: Set MouseButton
              -- ^ All mouse buttons currently pressed
-             , mousePos       :: V2 Int
+             , mousePos       :: V2 Double
              -- ^ Current mouse position
              , windowSize     :: V2 Int 
              -- ^ Current window size 
              }
 
 keyCallback :: IORef (Set Key) -> KeyCallback
-keyCallback keys k True = modifyIORef' keys (S.insert k)
-keyCallback keys k False = modifyIORef' keys (S.delete k)
+keyCallback keys _w k _ KeyState'Pressed _mods = modifyIORef' keys (S.insert k)
+keyCallback keys _w k _ KeyState'Released _mods = modifyIORef' keys (S.delete k)
+keyCallback _ _ _ _ _ _ = return ()
 
 mbCallback :: IORef (Set MouseButton) -> MouseButtonCallback
-mbCallback mbs b True = modifyIORef' mbs (S.insert b)
-mbCallback mbs b False = modifyIORef' mbs (S.delete b)
+mbCallback mbs _w b MouseButtonState'Pressed _ = modifyIORef' mbs (S.insert b)
+mbCallback mbs _w b MouseButtonState'Released _ = modifyIORef' mbs (S.delete b)
 
-mpCallback :: IORef (V2 Int) -> MousePositionCallback
-mpCallback mp x y = writeIORef mp (V2 x y)
+mpCallback :: IORef (V2 Double) -> CursorPosCallback
+mpCallback mp _w x y = writeIORef mp (V2 x y)
 
 wsCallback :: IORef (V2 Int) -> WindowSizeCallback
-wsCallback ws w h = writeIORef ws (V2 w h)
+wsCallback ws _w w h = writeIORef ws (V2 w h)
 
 -- | @initGL windowTitle width height@ creates a window with the given
 -- title and dimensions. The action returned presents a new frame (by
@@ -44,20 +48,32 @@ wsCallback ws w h = writeIORef ws (V2 w h)
 initGL :: String -> Int -> Int -> IO (IO UI)
 initGL windowTitle width height =
   do currDir <- getCurrentDirectory
-     _ <- initialize
-     _ <- openWindow opts
-     setWindowTitle windowTitle
+     setErrorCallback $ Just simpleErrorCallback
+     r <- init
+     when (not r) (error "Error initializing GLFW!")
+
+     windowHint $ WindowHint'ClientAPI ClientAPI'OpenGL
+     windowHint $ WindowHint'OpenGLForwardCompat True
+     windowHint $ WindowHint'OpenGLProfile OpenGLProfile'Core
+     windowHint $ WindowHint'ContextVersionMajor 3
+     windowHint $ WindowHint'ContextVersionMinor 2
+
+     m@(~(Just w)) <- createWindow width height windowTitle Nothing Nothing
+     when (isNothing m) (error "Couldn't create window!")
+
+     makeContextCurrent m
+
      kbState <- newIORef S.empty
      mbState <- newIORef S.empty
-     mpState <- getMousePosition >>= newIORef . uncurry V2
-     wsState <- getWindowDimensions >>= newIORef . uncurry V2
+     mpState <- getCursorPos w >>= newIORef . uncurry V2
+     wsState <- getWindowSize w >>= newIORef . uncurry V2
      lastTick <- getCurrentTime >>= newIORef
-     setKeyCallback (keyCallback kbState)
-     setMouseButtonCallback (mbCallback mbState)
-     setMousePositionCallback (mpCallback mpState)
-     setWindowSizeCallback (wsCallback wsState)
+     setKeyCallback w (Just $ keyCallback kbState)
+     setMouseButtonCallback w (Just $ mbCallback mbState)
+     setCursorPosCallback w (Just $ mpCallback mpState)
+     setWindowSizeCallback w (Just $ wsCallback wsState)
      setCurrentDirectory currDir
-     return $ do swapBuffers
+     return $ do swapBuffers w
                  pollEvents
                  t <- getCurrentTime
                  dt <- realToFrac . diffUTCTime t <$> readIORef lastTick
@@ -66,7 +82,4 @@ initGL windowTitle width height =
                        <*> readIORef mbState
                        <*> readIORef mpState
                        <*> readIORef wsState
-  where opts = defaultDisplayOptions { displayOptions_width = width
-                                     , displayOptions_height = height
-                                     , displayOptions_numDepthBits = 24
-                                     , displayOptions_openGLVersion = (3,2) }
+  where simpleErrorCallback e s = putStrLn $ unwords [show e, show s]
