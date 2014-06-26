@@ -70,7 +70,7 @@ enableVertices' s _ = enableAttribs s (Proxy::Proxy (PlainFieldRec rs)) >>=
 -- | Produce a 'GL.VertexArrayDescriptor' for a particular field of a
 -- vertex record.
 fieldToVAD :: forall sy v a r rs field proxy.
-              (r ~ (sy ::: v a), HasFieldNames (PlainFieldRec rs), 
+              (r ~ ((sy :: Symbol) ::: v a), HasFieldNames (PlainFieldRec rs), 
                HasFieldSizes (PlainFieldRec rs), HasGLType a,
                Storable (PlainFieldRec rs), Num (v a),
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 707
