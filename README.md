@@ -9,3 +9,5 @@ This library is a companion to the
 [linear](http://hackage.haskell.org/package/linear),
 [vinyl](http://hackage.haskell.org/package/vinyl), and
 [OpenGL](http://hackage.haskell.org/package/OpenGL) packages.
+
+[![Build Status](https://travis-ci.org/acowley/vinyl-gl.png)](https://travis-ci.org/acowley/vinyl-gl)
