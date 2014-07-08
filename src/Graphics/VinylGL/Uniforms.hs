@@ -7,7 +7,8 @@
 -- record corresponds to a uniform parameter of the given shader
 -- program, and that the types all agree.
 module Graphics.VinylGL.Uniforms (setAllUniforms, setSomeUniforms, setUniforms,
-                                  HasFieldGLTypes(..), SetUniformFields) where
+                                  HasFieldGLTypes(..), UniformFields,
+                                  SetUniformFields) where
 import Control.Applicative ((<$>))
 import Data.Foldable (traverse_)
 import qualified Data.Map as M
@@ -34,6 +35,8 @@ instance (HasVariableType t, HasFieldGLTypes (PlainFieldRec ts))
   fieldGLTypes _ = variableType (undefined::t) 
                    : fieldGLTypes (undefined::PlainFieldRec ts)
 
+-- | Constraint synonym for 'PlainFieldRec's that carry valid GLSL
+-- uniforms.
 type UniformFields a = (HasFieldNames a, HasFieldGLTypes a, SetUniformFields a)
 
 -- | Set GLSL uniform parameters from a 'PlainRec'. A check is
@@ -138,6 +141,8 @@ glTypeEquiv' x y = x == y
 glTypeEquiv :: VariableType -> VariableType -> Bool
 glTypeEquiv x y = glTypeEquiv' x y || glTypeEquiv' y x
 
+-- | Zips up lists of 'UniformLocation's and a 'PlainFieldRec' setting
+-- uniform parameters using the record fields.
 class SetUniformFields a where
   setUniformFields :: [Maybe UniformLocation] -> a -> IO ()
 

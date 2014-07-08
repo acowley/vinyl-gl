@@ -5,7 +5,7 @@
 -- with vertices represented as vinyl records.
 module Graphics.VinylGL.Vertex (bufferVertices, bindVertices, reloadVertices,
                                 deleteVertices, enableVertices, enableVertices',
-                                enableVertexFields,
+                                enableVertexFields, ViableVertex,
                                 BufferedVertices(..), fieldToVAD) where
 import Control.Applicative
 import Control.Arrow (second)
@@ -94,7 +94,7 @@ fieldToVAD _ _ = GL.VertexArrayDescriptor dim
         n = fromSing (sing::Sing sy)
 #endif
 
--- Constraint alias capturing the requirements of a vertex type.
+-- | Constraint alias capturing the requirements of a vertex type.
 type ViableVertex t = (HasFieldNames t, HasFieldSizes t, HasFieldDims t,
                        HasFieldGLTypes t, Storable t)
 
