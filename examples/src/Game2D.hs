@@ -44,8 +44,8 @@ spaceColumns = zipWith (map . (_x +~)) [0, 0.2 ..]
 
 -- Compute a textured vertex record for each input vertex.
 tileTex :: [[V2 GLfloat]] -> [FieldRec [Pos,Tex]]
-tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (pos =::))
-  where coords = map (tex =::) $ V2 <$> [0,1] <*> [0,1]
+tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (pos =:))
+  where coords = map (tex =:) $ V2 <$> [0,1] <*> [0,1]
 
 -- Load the geometry data for all grass tiles into OpenGL.
 grassTiles :: IO (BufferedVertices [Pos,Tex])
@@ -74,7 +74,7 @@ background =
   do [grass,dirt] <- loadTextures [ "ground.png", "ground_dirt.png" ]
      s <- simpleShaderProgram ("etc"</>"game2d.vert") ("etc"</>"game2d.frag")
      putStrLn "Loaded shaders"
-     setUniforms s (texSampler =:: 0)
+     setUniforms s (texSampler =: 0)
      grassVerts <- grassTiles
      eb <- bufferIndices inds
      grassVAO <- makeVAO $ do enableVertices' s grassVerts
@@ -112,7 +112,7 @@ loop tick = setup >>= go camera2D
           do ui <- tick
              clear [ColorBuffer, DepthBuffer]
              let mCam = camMatrix c
-                 info = Proxy =:: mCam
+                 info = Proxy =: mCam
              draw info
              if keysPressed ui ^. contains Key'Escape
              then return () -- terminate

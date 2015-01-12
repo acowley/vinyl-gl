@@ -47,11 +47,11 @@ pts = fold [ map (setNorm z)    front
            , map (setNorm y)    top
            , map (setNorm $ -y) bottom ]
   where [x,y,z] = basis
-        setNorm v p = (pos =:: p <+> normal =:: v)
+        setNorm v p = (pos =: p <+> normal =: v)
 
 -- Color the front vertices a dark blue, the back a light beige.
 colorize :: FieldRec [Pos,Normal] -> FieldRec [Pos,Normal,Color]
-colorize pt = pt <+> col =:: c
+colorize pt = pt <+> col =: c
   where c | view (rlens pos.rfield._z) pt > 0 =
               V3 8.235294e-2 0.20392157 0.3137255
           | otherwise = V3 0.95686275 0.8392157 0.7372549
@@ -71,7 +71,7 @@ cube = do s <- simpleShaderProgram ("etc"</>"poly.vert") ("etc"</>"poly.frag")
           eb <- makeBuffer ElementArrayBuffer inds
           vao <- makeVAO $
                  do currentProgram $= Just (program s)
-                    setUniforms s (light =:: normalize (V3 0 0 1))
+                    setUniforms s (light =: normalize (V3 0 0 1))
                     enableVertices' s vb
                     bindVertices vb
                     bindBuffer ElementArrayBuffer $= Just eb
@@ -93,13 +93,13 @@ ground :: (ProjInfo <: i) => IO (FieldRec i -> IO ())
 ground = do Right t <- readTexture $ "art"</>"Wood_floor_boards.png"
             generateMipmap' Texture2D
             s <- simpleShaderProgram ("etc"</>"ground.vert") ("etc"</>"ground.frag")
-            vb <- bufferVertices . map ((pos =::) . scale3D) $
+            vb <- bufferVertices . map ((pos =:) . scale3D) $
                   V2 <$> [-1,1] <*> [-1,1]
             vao <- makeVAO $
                    do currentProgram $= Just (program s)
                       enableVertices' s vb
                       bindVertices vb
-                      setUniforms s (tex =:: 0)
+                      setUniforms s (tex =: 0)
                       textureBinding Texture2D $= Just t
                       textureFilter Texture2D $= 
                         ((Linear', Just Linear'), Linear')
