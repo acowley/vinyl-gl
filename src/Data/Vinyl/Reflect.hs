@@ -25,7 +25,7 @@ instance (KnownSymbol sy, HasFieldNames (FieldRec ts))
                  : fieldNames (undefined::FieldRec ts)
 #else
 instance (SingI sy, HasFieldNames (PlainFieldRec ts))
-  => HasFieldNames (PlainFieldRec (((sy::Symbol):::t) ': ts)) where
+  => HasFieldNames (FieldRec ('((sy::Symbol),t) ': ts)) where
   fieldNames _ = fromSing (sing::Sing sy)
                  : fieldNames (undefined::PlainFieldRec ts)
 #endif

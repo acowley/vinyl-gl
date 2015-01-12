@@ -119,7 +119,7 @@ its associated rendering functions in `Geometry.hs` to see this in
 action. Note the association between the field named `"cam"` and the
 vertex shader uniform named `cam`.
 
-> type AppInfo = PlainRec '["cam" ::: M33 GLfloat]
+> type AppInfo = FieldRec '[ '("cam", M33 GLfloat)]
 
 Our game is just going to have ground in front of a blue sky
 background. The ground is made up of columns of dirt tiles, each
@@ -161,20 +161,20 @@ tile. Once again, we are arranging a coincidence of naming here: the
 vinyl `Field` `pos` has a type with name `"vertexCoord"` that matches
 up with the `vertexCoord` our vertex shader expects as input.
 
-> type Pos = "vertexCoord" ::: V2 GLfloat
-> type Tex = "texCoord"    ::: V2 GLfloat
+> type Pos = '("vertexCoord", V2 GLfloat)
+> type Tex = '("texCoord", V2 GLfloat)
 > 
-> pos :: Pos
-> pos = Field
+> pos :: SField Pos
+> pos = SField
 > 
-> tex :: Tex
-> tex = Field
+> tex :: SField Tex
+> tex = SField
 
 We're not going to do anything fancy with texture coordinates for now,
 so we will simply assign each vertex texture coordinates that map the
 entire texture to the tile square.
 
-> tileTex :: [[V2 GLfloat]] -> [PlainRec [Pos,Tex]]
+> tileTex :: [[V2 GLfloat]] -> [FieldRec [Pos,Tex]]
 > tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (pos =:))
 >   where coords = map (tex =:) $ V2 <$> [0,1] <*> [0,1]
 
@@ -187,7 +187,7 @@ The `grassTiles` action computes a list of vertices with position
 data into OpenGL. The fields used here will correspond to the inputs
 expected by our GLSL vertex shader. Data is loaded into OpenGL with
 the `bufferVertices` function that takes a list (or a
-`Data.Vector.Storable.Vector`) of `PlainRec`s and feeds the data into
+`Data.Vector.Storable.Vector`) of `FieldRec`s and feeds the data into
 OpenGL. Note that the `BufferedVertices` type is tagged with the
 fields of the buffered vertex data. This lets us compare our buffered
 data with the expectations of our GLSL program when possible.
@@ -303,7 +303,7 @@ to each field is identical to the corresponding GLSL input's name.
 >                          drawIndexedTris numDirtTris
 >   where numGrassTris = fromIntegral $ 2 * length gameLevel
 >         numDirtTris = fromIntegral . sum $ map (*2) gameLevel
->         texSampler = Field :: "tex" ::: GLint
+>         texSampler = SField :: SField '("tex", GLint)
 >         inds = take (sum $ map (*6) gameLevel) $
 >                foldMap (flip map [0,1,2,2,1,3] . (+)) [0,4..]
 
@@ -331,7 +331,7 @@ updated `UI` value and the drawing function returned from `setup`.
 >           do ui <- tick
 >              clear [ColorBuffer, DepthBuffer]
 >              let mCam = camMatrix c
->                  info = Field =: mCam
+>                  info = SField =: mCam
 >              draw info
 >              if keysPressed ui ^. contains KeyEsc
 >              then return () -- terminate
@@ -355,7 +355,7 @@ Safety Net
 Suppose we had written:
 
 ```Haskell
-type Pos = "vertexCoord" ::: V2 GLint
+type Pos = '("vertexCoord", V2 GLint)
 ```
 
 and treated vertex position as an integer value throughout.
@@ -369,7 +369,7 @@ Game2D: Type mismatch in vertexCoord
 Similarly, had we written:
 
 ```Haskell
-type Pos = "vertexCoord" ::: V3 GLfloat
+type Pos = '("vertexCoord", V3 GLfloat)
 ```
 
 We would see the same error at runtime. We are not inspecting the GLSL
@@ -383,7 +383,7 @@ Another potential mishap: had we let our names get out of sync and
 written,
 
 ```Haskell
-type Pos = "vCoords" ::: V2 GLfloat
+type Pos = '("vCoords", V2 GLfloat)
 ```
 
 We would get a different error at runtime:

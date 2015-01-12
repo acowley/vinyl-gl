@@ -3,11 +3,9 @@ module Geometry where
 import Control.Applicative
 import Control.Lens (view)
 import Data.Foldable (fold, foldMap)
-import Data.Proxy
 import Data.Vinyl
 import Graphics.GLUtil
-import Graphics.Rendering.OpenGL hiding (normal, normalize, light,
-                                         Normal, Color, Proxy)
+import Graphics.Rendering.OpenGL hiding (normal, normalize, light, Normal, Color)
 import Linear
 import Graphics.VinylGL
 import System.FilePath ((</>))
@@ -16,14 +14,14 @@ type Pos    = '("vertexPos", V3 GLfloat)
 type Normal = '("vertexNormal", V3 GLfloat)
 type Color  = '("vertexColor", V3 GLfloat)
 
-pos :: Proxy Pos
-pos = Proxy
+pos :: SField Pos
+pos = SField
 
-normal :: Proxy Normal
-normal = Proxy
+normal :: SField Normal
+normal = SField
 
-col :: Proxy Color
-col = Proxy
+col :: SField Color
+col = SField
 
 -- The 2D corners of a square.
 square :: [V2 GLfloat]
@@ -80,8 +78,8 @@ cube = do s <- simpleShaderProgram ("etc"</>"poly.vert") ("etc"</>"poly.frag")
             do currentProgram $= Just (program s)
                ss (rcast appInfo :: FieldRec CamInfo)
                drawIndexedTris 12
-  where light :: Proxy '("lightDir", V3 GLfloat)
-        light = Proxy
+  where light :: SField '("lightDir", V3 GLfloat)
+        light = SField
 
 -- We don't use normal vectors with the ground, so we just need a
 -- single composite projection matrix.
@@ -111,5 +109,5 @@ ground = do Right t <- readTexture $ "art"</>"Wood_floor_boards.png"
                  withTextures2D [t] $ drawArrays TriangleStrip 0 4
   where scale3D :: V2 GLfloat -> V3 GLfloat
         scale3D = (\(V2 x z) -> V3 x (-1.01) z) . (3*^)
-        tex :: Proxy '("tex", GLint)
-        tex = Proxy
+        tex :: SField '("tex", GLint)
+        tex = SField

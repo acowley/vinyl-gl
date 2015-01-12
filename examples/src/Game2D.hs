@@ -2,11 +2,10 @@
 import Control.Applicative
 import Control.Lens ((+~), (^.), contains)
 import Data.Foldable (foldMap, traverse_)
-import Data.Proxy
 import Data.Vinyl
 import Graphics.GLUtil
 import Graphics.GLUtil.Camera2D
-import Graphics.Rendering.OpenGL hiding (Proxy)
+import Graphics.Rendering.OpenGL
 import Graphics.UI.GLFW (Key(Key'Escape))
 import Graphics.VinylGL
 import Linear (V2(..), _x, M33)
@@ -31,11 +30,11 @@ tile h = let h' = fromIntegral h / 10 in V2 <$> [0,0.2] <*> [h', h' - 0.2]
 type Pos = '("vertexCoord", V2 GLfloat)
 type Tex = '("texCoord", V2 GLfloat)
 
-pos :: Proxy Pos
-pos = Proxy
+pos :: SField Pos
+pos = SField
 
-tex :: Proxy Tex
-tex = Proxy
+tex :: SField Tex
+tex = SField
 
 -- Each element of the outer list is a list of the vertices that make
 -- up a column. Push each successive column farther along the X axis.
@@ -92,7 +91,7 @@ background =
                          drawIndexedTris numDirtTris
   where numGrassTris = fromIntegral $ 2 * length gameLevel
         numDirtTris = fromIntegral . sum $ map (*2) gameLevel
-        texSampler = Proxy :: Proxy '("tex", GLint)
+        texSampler = SField :: SField '("tex", GLint)
         inds = take (sum $ map (*6) gameLevel) $
                foldMap (flip map [0,1,2,2,1,3] . (+)) [0,4..]
 
@@ -112,7 +111,7 @@ loop tick = setup >>= go camera2D
           do ui <- tick
              clear [ColorBuffer, DepthBuffer]
              let mCam = camMatrix c
-                 info = Proxy =: mCam
+                 info = SField =: mCam
              draw info
              if keysPressed ui ^. contains Key'Escape
              then return () -- terminate

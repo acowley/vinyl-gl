@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds, KindSignatures, TypeOperators #-}
-import Data.Proxy
 import Data.Vinyl
 import Data.Word
 import Foreign.Ptr (nullPtr, plusPtr)
@@ -14,15 +13,14 @@ import Test.HUnit (Test(..), (~=?))
 type Pos = '("vpos", V3 GLfloat)
 type Tag = '("tagByte", V1 Word8)
 
-tag :: Proxy Tag
-tag = Proxy
+tag :: SField Tag
+tag = SField
 
 type Vertex = FieldRec [Pos, Tag]
 
---testVad :: VertexArrayDescriptor Word8
 testVad :: Test
 testVad = TestLabel "Sample VAD Creation" $
-          vad ~=? fieldToVAD tag (Proxy::Proxy Vertex)
+          vad ~=? fieldToVAD tag (SField::SField Vertex)
   where vad = VertexArrayDescriptor 1 UnsignedByte 13 (nullPtr `plusPtr` 12)
 
 main :: IO ()
