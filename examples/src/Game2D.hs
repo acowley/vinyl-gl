@@ -2,11 +2,11 @@
 import Control.Applicative
 import Control.Lens ((+~), (^.), contains)
 import Data.Foldable (foldMap, traverse_)
+import Data.Proxy
 import Data.Vinyl
-import Data.Vinyl.Universe ((:::), SField(..))
 import Graphics.GLUtil
 import Graphics.GLUtil.Camera2D
-import Graphics.Rendering.OpenGL
+import Graphics.Rendering.OpenGL hiding (Proxy)
 import Graphics.UI.GLFW (Key(Key'Escape))
 import Graphics.VinylGL
 import Linear (V2(..), _x, M33)
@@ -15,7 +15,7 @@ import Keyboard2D (moveCamera)
 import Window (initGL, UI(..))
 
 -- A record each drawing function will receive.
-type AppInfo = PlainFieldRec '["cam" ::: M33 GLfloat]
+type AppInfo = FieldRec '[ '("cam", M33 GLfloat) ]
 
 -- The ground level for each column in our map. Heights go up from 0
 -- to 10.
@@ -28,14 +28,14 @@ tile :: Int -> [V2 GLfloat]
 tile h = let h' = fromIntegral h / 10 in V2 <$> [0,0.2] <*> [h', h' - 0.2]
 
 -- Our vertices will have position and texture coordinates.
-type Pos = "vertexCoord" ::: V2 GLfloat
-type Tex = "texCoord"    ::: V2 GLfloat
+type Pos = '("vertexCoord", V2 GLfloat)
+type Tex = '("texCoord", V2 GLfloat)
 
-pos :: SField Pos
-pos = SField
+pos :: Proxy Pos
+pos = Proxy
 
-tex :: SField Tex
-tex = SField
+tex :: Proxy Tex
+tex = Proxy
 
 -- Each element of the outer list is a list of the vertices that make
 -- up a column. Push each successive column farther along the X axis.
@@ -43,9 +43,9 @@ spaceColumns :: [[V2 GLfloat]] -> [[V2 GLfloat]]
 spaceColumns = zipWith (map . (_x +~)) [0, 0.2 ..]
 
 -- Compute a textured vertex record for each input vertex.
-tileTex :: [[V2 GLfloat]] -> [PlainFieldRec [Pos,Tex]]
-tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (pos =:))
-  where coords = map (tex =:) $ V2 <$> [0,1] <*> [0,1]
+tileTex :: [[V2 GLfloat]] -> [FieldRec [Pos,Tex]]
+tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (pos =::))
+  where coords = map (tex =::) $ V2 <$> [0,1] <*> [0,1]
 
 -- Load the geometry data for all grass tiles into OpenGL.
 grassTiles :: IO (BufferedVertices [Pos,Tex])
@@ -74,7 +74,7 @@ background =
   do [grass,dirt] <- loadTextures [ "ground.png", "ground_dirt.png" ]
      s <- simpleShaderProgram ("etc"</>"game2d.vert") ("etc"</>"game2d.frag")
      putStrLn "Loaded shaders"
-     setUniforms s (texSampler =: 0)
+     setUniforms s (texSampler =:: 0)
      grassVerts <- grassTiles
      eb <- bufferIndices inds
      grassVAO <- makeVAO $ do enableVertices' s grassVerts
@@ -92,7 +92,7 @@ background =
                          drawIndexedTris numDirtTris
   where numGrassTris = fromIntegral $ 2 * length gameLevel
         numDirtTris = fromIntegral . sum $ map (*2) gameLevel
-        texSampler = SField :: SField ("tex" ::: GLint)
+        texSampler = Proxy :: Proxy '("tex", GLint)
         inds = take (sum $ map (*6) gameLevel) $
                foldMap (flip map [0,1,2,2,1,3] . (+)) [0,4..]
 
@@ -112,7 +112,7 @@ loop tick = setup >>= go camera2D
           do ui <- tick
              clear [ColorBuffer, DepthBuffer]
              let mCam = camMatrix c
-                 info = SField =: mCam
+                 info = Proxy =:: mCam
              draw info
              if keysPressed ui ^. contains Key'Escape
              then return () -- terminate

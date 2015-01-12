@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds, KindSignatures, TypeOperators #-}
 import Data.Proxy
 import Data.Vinyl
-import Data.Vinyl.Universe
 import Data.Word
 import Foreign.Ptr (nullPtr, plusPtr)
 import Graphics.Rendering.OpenGL (DataType(..), GLfloat,
@@ -12,13 +11,13 @@ import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
 import Test.HUnit (Test(..), (~=?))
 
-type Pos = "vpos" ::: V3 GLfloat
-type Tag = "tagByte" ::: V1 Word8
+type Pos = '("vpos", V3 GLfloat)
+type Tag = '("tagByte", V1 Word8)
 
-tag :: SField Tag
-tag = SField
+tag :: Proxy Tag
+tag = Proxy
 
-type Vertex = PlainFieldRec [Pos, Tag]
+type Vertex = FieldRec [Pos, Tag]
 
 --testVad :: VertexArrayDescriptor Word8
 testVad :: Test

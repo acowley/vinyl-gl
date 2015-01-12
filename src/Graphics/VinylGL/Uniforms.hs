@@ -14,10 +14,8 @@ import Data.Foldable (traverse_)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
 import qualified Data.Set as S
-import Data.Vinyl (FieldRec, PlainFieldRec, Rec(..))
-import Data.Vinyl.Idiom.Identity
+import Data.Vinyl (FieldRec, ElField(..), Rec(..))
 import Data.Vinyl.Reflect (HasFieldNames(..))
-import Data.Vinyl.Universe ((:::))
 import GHC.TypeLits (Symbol)
 import Graphics.GLUtil (HasVariableType(..), ShaderProgram(..), AsUniform(..))
 import Graphics.Rendering.OpenGL as GL
@@ -27,15 +25,15 @@ import Graphics.Rendering.OpenGL as GL
 class HasFieldGLTypes a where
   fieldGLTypes :: a -> [GL.VariableType]
 
-instance HasFieldGLTypes (FieldRec f '[]) where
+instance HasFieldGLTypes (FieldRec '[]) where
   fieldGLTypes _ = []
 
-instance (HasVariableType t, HasFieldGLTypes (PlainFieldRec ts))
-  => HasFieldGLTypes (PlainFieldRec ((sy::Symbol):::t ': ts)) where
+instance (HasVariableType t, HasFieldGLTypes (FieldRec ts))
+  => HasFieldGLTypes (FieldRec ('((sy::Symbol), t) ': ts)) where
   fieldGLTypes _ = variableType (undefined::t) 
-                   : fieldGLTypes (undefined::PlainFieldRec ts)
+                   : fieldGLTypes (undefined::FieldRec ts)
 
--- | Constraint synonym for 'PlainFieldRec's that carry valid GLSL
+-- | Constraint synonym for 'FieldRec's that carry valid GLSL
 -- uniforms.
 type UniformFields a = (HasFieldNames a, HasFieldGLTypes a, SetUniformFields a)
 
@@ -43,45 +41,45 @@ type UniformFields a = (HasFieldNames a, HasFieldGLTypes a, SetUniformFields a)
 -- performed to verify that /all/ uniforms used by a program are
 -- represented by the record type. In other words, the record is a
 -- superset of the parameters used by the program.
-setAllUniforms :: forall ts. UniformFields (PlainFieldRec ts)
-            => ShaderProgram -> PlainFieldRec ts -> IO ()
+setAllUniforms :: forall ts. UniformFields (FieldRec ts)
+            => ShaderProgram -> FieldRec ts -> IO ()
 setAllUniforms s x = case checks of
                     Left msg -> error msg
                     Right _ -> setUniformFields locs x
-  where fnames = fieldNames (undefined::PlainFieldRec ts)
+  where fnames = fieldNames (undefined::FieldRec ts)
         checks = do namesCheck "record" (M.keys $ uniforms s) fnames
                     typesCheck True (snd <$> uniforms s) fieldTypes
         fieldTypes = M.fromList $
-                     zip fnames (fieldGLTypes (undefined::PlainFieldRec ts))
+                     zip fnames (fieldGLTypes (undefined::FieldRec ts))
         locs = map (fmap fst . (`M.lookup` uniforms s)) fnames
 {-# INLINE setAllUniforms #-}
 
 -- | Set GLSL uniform parameters from a 'PlainRec' representing a
 -- subset of all uniform parameters used by a program.
-setUniforms :: forall ts. UniformFields (PlainFieldRec ts)
-            => ShaderProgram -> PlainFieldRec ts -> IO ()
+setUniforms :: forall ts. UniformFields (FieldRec ts)
+            => ShaderProgram -> FieldRec ts -> IO ()
 setUniforms s x = case checks of
                     Left msg -> error msg
                     Right _ -> setUniformFields locs x
-  where fnames = fieldNames (undefined::PlainFieldRec ts)
+  where fnames = fieldNames (undefined::FieldRec ts)
         checks = do namesCheck "GLSL program" fnames (M.keys $ uniforms s)
                     typesCheck False fieldTypes (snd <$> uniforms s)
         fieldTypes = M.fromList $
-                     zip fnames (fieldGLTypes (undefined::PlainFieldRec ts))
+                     zip fnames (fieldGLTypes (undefined::FieldRec ts))
         locs = map (fmap fst . (`M.lookup` uniforms s)) fnames
 {-# INLINE setUniforms #-}
 
 -- | Set GLSL uniform parameters from those fields of a 'PlainRec'
 -- whose names correspond to uniform parameters used by a program.
-setSomeUniforms :: forall ts. UniformFields (PlainFieldRec ts)
-                => ShaderProgram -> PlainFieldRec ts -> IO ()
+setSomeUniforms :: forall ts. UniformFields (FieldRec ts)
+                => ShaderProgram -> FieldRec ts -> IO ()
 setSomeUniforms s x = case typesCheck' True (snd <$> uniforms s) fieldTypes of
                         Left msg -> error msg
                         Right _ -> setUniformFields locs x
-  where fnames = fieldNames (undefined::PlainFieldRec ts)
+  where fnames = fieldNames (undefined::FieldRec ts)
         {-# INLINE fnames #-}
         fieldTypes = M.fromList . zip fnames $
-                     fieldGLTypes (undefined::PlainFieldRec ts)
+                     fieldGLTypes (undefined::FieldRec ts)
         {-# INLINE fieldTypes #-}
         locs = map (fmap fst . (`M.lookup` uniforms s)) fnames
         {-# INLINE locs #-}
@@ -141,19 +139,19 @@ glTypeEquiv' x y = x == y
 glTypeEquiv :: VariableType -> VariableType -> Bool
 glTypeEquiv x y = glTypeEquiv' x y || glTypeEquiv' y x
 
--- | Zips up lists of 'UniformLocation's and a 'PlainFieldRec' setting
+-- | Zips up lists of 'UniformLocation's and a 'FieldRec' setting
 -- uniform parameters using the record fields.
 class SetUniformFields a where
   setUniformFields :: [Maybe UniformLocation] -> a -> IO ()
 
-instance SetUniformFields (FieldRec f '[]) where
+instance SetUniformFields (FieldRec '[]) where
   setUniformFields _ _ = return ()
   {-# INLINE setUniformFields #-}
 
-instance (AsUniform t, SetUniformFields (PlainFieldRec ts))
-  => SetUniformFields (PlainFieldRec (((sy::Symbol):::t) ': ts)) where
+instance (AsUniform t, SetUniformFields (FieldRec ts))
+  => SetUniformFields (FieldRec ('((sy::Symbol), t) ': ts)) where
   setUniformFields [] _ = error "Ran out of UniformLocations"
-  setUniformFields (loc:locs) (Identity x :& xs) = 
+  setUniformFields (loc:locs) (Field x :& xs) = 
     do traverse_ (asUniform x) loc
        setUniformFields locs xs
   {-# INLINABLE setUniformFields #-}
