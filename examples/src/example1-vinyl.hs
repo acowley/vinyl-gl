@@ -4,7 +4,7 @@
 -- vinyl-gl package. The program fades between two images.
 import Control.Applicative
 import Control.Monad (when)
-import Data.Vinyl ((:::)(..), (=:))
+import Data.Vinyl
 import Graphics.Rendering.OpenGL
 import Graphics.UI.GLFW
 import Graphics.GLUtil
@@ -39,9 +39,9 @@ imageFade =
        do currentProgram $= Just (program s)
           setFade $ fadeFactor r
           withVAO vao . withTextures2D ts $ drawArrays TriangleStrip 0 4
-  where pos = Field :: "position" ::: V2 GLfloat
-        texs = Field :: "textures" ::: [V1 GLint]
-        fade = Field :: "fade_factor" ::: GLfloat
+  where pos = SField :: SField '("position", V2 GLfloat)
+        texs = SField :: SField '("textures", [V1 GLint])
+        fade = SField :: SField '("fade_factor", GLfloat)
 
 animate :: Resources -> IO Resources
 animate r = do seconds <- getTime
