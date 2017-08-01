@@ -26,6 +26,7 @@ executable game2d
                        time >= 1.4, directory >= 1.2, lens >= 3.9
   hs-source-dirs:      src
   default-language:    Haskell2010
+  ghc-options:         -dynamic
 
 executable demo3d
   main-is:             Demo3D.hs
@@ -36,3 +37,4 @@ executable demo3d
                        time >= 1.4, directory >= 1.2, lens >= 3.9
   hs-source-dirs:      src
   default-language:    Haskell2010
+  ghc-options:         -dynamic
