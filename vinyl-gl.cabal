@@ -1,5 +1,5 @@
 name:          vinyl-gl
-version:       0.3.1
+version:       0.3.2
 synopsis:      Utilities for working with OpenGL's GLSL shading language and vinyl records.
 description:   Using "Data.Vinyl" records (similar in spirit to @HList@)
                to carry GLSL uniform parameters and vertex data enables
@@ -28,7 +28,7 @@ library
                        Graphics.VinylGL.Vertex
   -- other-modules:
   build-depends:       base >= 4.6 && < 5, transformers >= 0.3,
-                       vinyl >= 0.5.1 && < 0.7,
+                       vinyl >= 0.5.1 && < 0.8,
                        containers >= 0.5, GLUtil >= 0.6.4, OpenGL >= 2.8,
                        tagged >= 0.4, vector >= 0.10, linear >= 1.1.3
   hs-source-dirs:      src
