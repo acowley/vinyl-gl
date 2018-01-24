@@ -1,5 +1,5 @@
 name:                vinyl-gl-examples
-version:             0.2.1
+version:             0.3.0
 synopsis:            Example programs using vinyl-gl.
 
 description:         The most convenient way to run these demonstrations is to
@@ -20,7 +20,7 @@ data-files:          etc/*.frag, etc/*.vert, art/*.png
 executable game2d
   main-is:             Game2D.hs
   other-modules:       Window, Keyboard2D
-  build-depends:       base >= 4.6, vinyl >= 0.4, GLFW-b >= 1.4 && < 1.5,
+  build-depends:       base >= 4.6, vinyl >= 0.8, GLFW-b >= 1.4 && < 1.5,
                        linear >= 1.1, GLUtil >= 0.7, OpenGL >= 2.9.2,
                        filepath >= 1.3 && < 1.5, vinyl-gl >= 0.2, containers >= 0.5,
                        time >= 1.4, directory >= 1.2, lens >= 3.9
@@ -31,7 +31,7 @@ executable game2d
 executable demo3d
   main-is:             Demo3D.hs
   other-modules:       Window, Keyboard3D, Geometry
-  build-depends:       base >= 4.6, vinyl >= 0.4, GLFW-b >= 1.4 && < 1.5,
+  build-depends:       base >= 4.6, vinyl >= 0.8, GLFW-b >= 1.4 && < 1.5,
                        linear >= 1.1, GLUtil >= 0.7, OpenGL >= 2.9.2,
                        filepath >= 1.3 && < 1.6, vinyl-gl >= 0.2, containers >= 0.5,
                        time >= 1.4, directory >= 1.2, lens >= 3.9

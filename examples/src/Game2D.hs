@@ -43,8 +43,8 @@ spaceColumns = zipWith (map . (_x +~)) [0, 0.2 ..]
 
 -- Compute a textured vertex record for each input vertex.
 tileTex :: [[V2 GLfloat]] -> [FieldRec [Pos,Tex]]
-tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (pos =:))
-  where coords = map (tex =:) $ V2 <$> [0,1] <*> [0,1]
+tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (pos =:=))
+  where coords = map (tex =:=) $ V2 <$> [0,1] <*> [0,1]
 
 -- Load the geometry data for all grass tiles into OpenGL.
 grassTiles :: IO (BufferedVertices [Pos,Tex])
@@ -69,11 +69,11 @@ loadTextures = fmap (either error id . sequence) . mapM aux
 -- Ground textures from: http://opengameart.org/content/platformer-tiles
 -- Attributed to: "Kenney.nl" or "www.kenney.nl"
 background :: IO (AppInfo -> IO ())
-background = 
+background =
   do [grass,dirt] <- loadTextures [ "ground.png", "ground_dirt.png" ]
      s <- simpleShaderProgram ("etc"</>"game2d.vert") ("etc"</>"game2d.frag")
      putStrLn "Loaded shaders"
-     setUniforms s (texSampler =: 0)
+     setUniforms s (texSampler =:= 0)
      grassVerts <- grassTiles
      eb <- bufferIndices inds
      grassVAO <- makeVAO $ do enableVertices' s grassVerts
@@ -107,11 +107,11 @@ setup = do clearColor $= Color4 0.812 0.957 0.969 1
 loop :: IO UI -> IO ()
 loop tick = setup >>= go camera2D
   where go :: Camera GLfloat -> (AppInfo -> IO ()) -> IO ()
-        go c draw = 
+        go c draw =
           do ui <- tick
              clear [ColorBuffer, DepthBuffer]
              let mCam = camMatrix c
-                 info = SField =: mCam
+                 info = SField =:= mCam
              draw info
              if keysPressed ui ^. contains Key'Escape
              then return () -- terminate

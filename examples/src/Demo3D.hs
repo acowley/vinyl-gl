@@ -25,17 +25,17 @@ tex = SField
 logo :: IO (IO ())
 logo = do Right t <- readTexture ("art"</>"Haskell-Logo.png")
           s <- simpleShaderProgram ("etc"</>"logo.vert") ("etc"</>"logo.frag")
-          vb <- bufferVertices $ map (pos =:) [0, V2 0.25 0, 0.25, V2 0 0.25]
+          vb <- bufferVertices $ map (pos =:=) [0, V2 0.25 0, 0.25, V2 0 0.25]
           vao <- makeVAO $
                  do currentProgram $= Just (program s)
                     enableVertices' s vb
                     bindVertices vb
                     textureBinding Texture2D $= Just t
-                    textureFilter Texture2D $= 
+                    textureFilter Texture2D $=
                       ((Nearest, Nothing), Nearest)
                     texture2DWrap $= (Mirrored, ClampToEdge)
-                    setUniforms s (tex =: 0)
-          return . withVAO vao $ 
+                    setUniforms s (tex =:= 0)
+          return . withVAO vao $
             do currentProgram $= Just (program s)
                withTextures2D [t] (drawArrays TriangleFan 0 4)
 
@@ -61,15 +61,15 @@ setup = do clearColor $= Color4 0.3 0.6 0.3 1
 loop :: IO UI -> IO ()
 loop tick = setup >>= go cam0
   where go :: Camera GLfloat -> (AppInfo -> IO ()) -> IO ()
-        go c draw = 
+        go c draw =
           do ui <- tick
              clear [ColorBuffer, DepthBuffer]
              let V2 ww wh = fromIntegral <$> (windowSize ui - V2 160 120)
                  mProj = projectionMatrix (deg2rad 30) (ww / wh) 0.01 100
                  mCam = camMatrix c
-                 info =  SField =: mCam
-                     <+> SField =: (mProj !*! mCam)
-                     <+> SField =: (fromIntegral <$> windowSize ui)
+                 info =  SField =:= mCam
+                     <+> SField =:= (mProj !*! mCam)
+                     <+> SField =:= (fromIntegral <$> windowSize ui)
              draw info
              if keysPressed ui ^. contains Key'Escape
              then return () -- terminate
