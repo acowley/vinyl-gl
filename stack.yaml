@@ -1,12 +1,13 @@
-resolver: lts-6.4
+# resolver: lts-6.4
+resolver: ghc-8.2.2
 
 packages:
 - '.'
 - 'examples'
 
-extra-deps:
-- GLUtil-0.9.0.1
-- hpp-0.3.0.0
+extra-deps: []
+# - GLUtil-0.9.0.1
+# - hpp-0.3.0.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}
@@ -16,7 +17,7 @@ extra-package-dbs: []
 
 # Control whether we use the GHC we find on the path
 # system-ghc: true
-system-ghc: false
+# system-ghc: false
 
 # Extra directories used by stack for building
 # extra-include-dirs: [/path/to/dir]
