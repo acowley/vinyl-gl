@@ -1,5 +1,5 @@
 # resolver: lts-6.4
-resolver: ghc-8.2.2
+resolver: ghc-8.4.3
 
 packages:
 - '.'

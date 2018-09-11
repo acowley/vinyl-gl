@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, TypeOperators #-}
+{-# LANGUAGE DataKinds, OverloadedLabels, TypeOperators #-}
 import Control.Applicative
 import Control.Lens ((+~), (^.), contains)
 import Data.Foldable (foldMap, traverse_)
@@ -27,14 +27,8 @@ tile :: Int -> [V2 GLfloat]
 tile h = let h' = fromIntegral h / 10 in V2 <$> [0,0.2] <*> [h', h' - 0.2]
 
 -- Our vertices will have position and texture coordinates.
-type Pos = '("vertexCoord", V2 GLfloat)
-type Tex = '("texCoord", V2 GLfloat)
-
-pos :: SField Pos
-pos = SField
-
-tex :: SField Tex
-tex = SField
+type Pos = "vertexCoord" ::: V2 GLfloat
+type Tex = "texCoord" ::: V2 GLfloat
 
 -- Each element of the outer list is a list of the vertices that make
 -- up a column. Push each successive column farther along the X axis.
@@ -43,8 +37,8 @@ spaceColumns = zipWith (map . (_x +~)) [0, 0.2 ..]
 
 -- Compute a textured vertex record for each input vertex.
 tileTex :: [[V2 GLfloat]] -> [FieldRec [Pos,Tex]]
-tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (pos =:=))
-  where coords = map (tex =:=) $ V2 <$> [0,1] <*> [0,1]
+tileTex = foldMap (flip (zipWith (<+>)) (cycle coords) . map (#vertexCoord =:=))
+  where coords = map (#texCoord =:=) $ V2 <$> [0,1] <*> [0,1]
 
 -- Load the geometry data for all grass tiles into OpenGL.
 grassTiles :: IO (BufferedVertices [Pos,Tex])
@@ -73,7 +67,7 @@ background =
   do [grass,dirt] <- loadTextures [ "ground.png", "ground_dirt.png" ]
      s <- simpleShaderProgram ("etc"</>"game2d.vert") ("etc"</>"game2d.frag")
      putStrLn "Loaded shaders"
-     setUniforms s (texSampler =:= 0)
+     setUniforms s (#tex =:= (0 :: GLint))
      grassVerts <- grassTiles
      eb <- bufferIndices inds
      grassVAO <- makeVAO $ do enableVertices' s grassVerts
@@ -91,7 +85,6 @@ background =
                          drawIndexedTris numDirtTris
   where numGrassTris = fromIntegral $ 2 * length gameLevel
         numDirtTris = fromIntegral . sum $ map (*2) gameLevel
-        texSampler = SField :: SField '("tex", GLint)
         inds = take (sum $ map (*6) gameLevel) $
                foldMap (flip map [0,1,2,2,1,3] . (+)) [0,4..]
 
@@ -110,9 +103,7 @@ loop tick = setup >>= go camera2D
         go c draw =
           do ui <- tick
              clear [ColorBuffer, DepthBuffer]
-             let mCam = camMatrix c
-                 info = SField =:= mCam
-             draw info
+             draw (Field (camMatrix c) :& RNil)
              if keysPressed ui ^. contains Key'Escape
              then return () -- terminate
              else go (moveCamera ui c) draw

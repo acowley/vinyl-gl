@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, FlexibleContexts, TypeOperators #-}
+{-# LANGUAGE DataKinds, FlexibleContexts, OverloadedLabels, TypeOperators #-}
 module Geometry where
 import Control.Applicative
 import Control.Lens (view)
@@ -10,18 +10,9 @@ import Linear
 import Graphics.VinylGL
 import System.FilePath ((</>))
 
-type Pos    = '("vertexPos", V3 GLfloat)
-type Normal = '("vertexNormal", V3 GLfloat)
-type Color  = '("vertexColor", V3 GLfloat)
-
-pos :: SField Pos
-pos = SField
-
-normal :: SField Normal
-normal = SField
-
-col :: SField Color
-col = SField
+type Pos    = "vertexPos" ::: V3 GLfloat
+type Normal = "vertexNormal" ::: V3 GLfloat
+type Color  = "vertexColor" ::: V3 GLfloat
 
 -- The 2D corners of a square.
 square :: [V2 GLfloat]
@@ -37,7 +28,7 @@ top    = map (\(V2 x z) -> V3 x 1 (-z)) square
 bottom = map (\(V2 x z) -> V3 x (-1) z) square
 
 -- Cube face vertices paired with normal vectors.
-pts :: [FieldRec [Pos,Normal]]
+pts :: [FieldRec '[Pos,Normal]]
 pts = fold [ map (setNorm z)    front
            , map (setNorm $ -z) back
            , map (setNorm $ -x) left
@@ -45,12 +36,12 @@ pts = fold [ map (setNorm z)    front
            , map (setNorm y)    top
            , map (setNorm $ -y) bottom ]
   where [x,y,z] = basis
-        setNorm v p = (pos =:= p <+> normal =:= v)
+        setNorm v p = xrec (p, v) :: FieldRec '[Pos,Normal]
 
 -- Color the front vertices a dark blue, the back a light beige.
 colorize :: FieldRec [Pos,Normal] -> FieldRec [Pos,Normal,Color]
-colorize pt = pt <+> col =:= c
-  where c | view (rlens pos.rfield._z) pt > 0 =
+colorize pt = pt <+> #vertexColor =:= c
+  where c | view (rlensf #vertexPos . _z) pt > 0 =
               V3 8.235294e-2 0.20392157 0.3137255
           | otherwise = V3 0.95686275 0.8392157 0.7372549
 
@@ -69,7 +60,7 @@ cube = do s <- simpleShaderProgram ("etc"</>"poly.vert") ("etc"</>"poly.frag")
           eb <- makeBuffer ElementArrayBuffer inds
           vao <- makeVAO $
                  do currentProgram $= Just (program s)
-                    setUniforms s (light =:= normalize (V3 0 0 1))
+                    setUniforms s (light (normalize (V3 0 0 1)))
                     enableVertices' s vb
                     bindVertices vb
                     bindBuffer ElementArrayBuffer $= Just eb
@@ -78,8 +69,8 @@ cube = do s <- simpleShaderProgram ("etc"</>"poly.vert") ("etc"</>"poly.frag")
             do currentProgram $= Just (program s)
                ss (rcast appInfo :: FieldRec CamInfo)
                drawIndexedTris 12
-  where light :: SField '("lightDir", V3 GLfloat)
-        light = SField
+  where light :: V3 GLfloat -> FieldRec '["lightDir" ::: V3 GLfloat]
+        light = (:& RNil) . Field
 
 -- We don't use normal vectors with the ground, so we just need a
 -- single composite projection matrix.
@@ -91,13 +82,13 @@ ground :: (ProjInfo <: i) => IO (FieldRec i -> IO ())
 ground = do Right t <- readTexture $ "art"</>"Wood_floor_boards.png"
             generateMipmap' Texture2D
             s <- simpleShaderProgram ("etc"</>"ground.vert") ("etc"</>"ground.frag")
-            vb <- bufferVertices . map ((pos =:=) . scale3D) $
+            vb <- bufferVertices . map ((#vertexPos =:=) . scale3D) $
                   V2 <$> [-1,1] <*> [-1,1]
             vao <- makeVAO $
                    do currentProgram $= Just (program s)
                       enableVertices' s vb
                       bindVertices vb
-                      setUniforms s (tex =:= 0)
+                      setUniforms s (#tex =:= (0 :: GLint))
                       textureBinding Texture2D $= Just t
                       textureFilter Texture2D $=
                         ((Linear', Just Linear'), Linear')
@@ -109,5 +100,3 @@ ground = do Right t <- readTexture $ "art"</>"Wood_floor_boards.png"
                  withTextures2D [t] $ drawArrays TriangleStrip 0 4
   where scale3D :: V2 GLfloat -> V3 GLfloat
         scale3D = (\(V2 x z) -> V3 x (-1.01) z) . (3*^)
-        tex :: SField '("tex", GLint)
-        tex = SField

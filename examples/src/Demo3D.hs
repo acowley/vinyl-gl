@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, TypeOperators #-}
+{-# LANGUAGE DataKinds, OverloadedLabels, TypeOperators #-}
 import Control.Applicative
 import Control.Lens ((^.), contains)
 import Data.Vinyl
@@ -16,16 +16,13 @@ import Window (initGL, UI(..))
 
 -- Note that the field name, "vertexCoord", matches the attribute name
 -- in the vertex shader.
-pos :: SField '("vertexCoord", v GLfloat)
-pos = SField
-
-tex :: SField '("tex", GLint)
-tex = SField
+pos :: v GLfloat -> FieldRec '["vertexCoord" ::: v GLfloat]
+pos = (:& RNil) . Field
 
 logo :: IO (IO ())
 logo = do Right t <- readTexture ("art"</>"Haskell-Logo.png")
           s <- simpleShaderProgram ("etc"</>"logo.vert") ("etc"</>"logo.frag")
-          vb <- bufferVertices $ map (pos =:=) [0, V2 0.25 0, 0.25, V2 0 0.25]
+          vb <- bufferVertices $ map pos [0, V2 0.25 0, 0.25, V2 0 0.25]
           vao <- makeVAO $
                  do currentProgram $= Just (program s)
                     enableVertices' s vb
@@ -34,7 +31,7 @@ logo = do Right t <- readTexture ("art"</>"Haskell-Logo.png")
                     textureFilter Texture2D $=
                       ((Nearest, Nothing), Nearest)
                     texture2DWrap $= (Mirrored, ClampToEdge)
-                    setUniforms s (tex =:= 0)
+                    setUniforms s (#tex =:= (0 :: GLint))
           return . withVAO vao $
             do currentProgram $= Just (program s)
                withTextures2D [t] (drawArrays TriangleFan 0 4)
@@ -55,7 +52,7 @@ setup = do clearColor $= Color4 0.3 0.6 0.3 1
            return $ \x -> subView >> vp x (mainView x)
   where vp = withViewport (Position px py)
            . (\(V2 w h) -> Size w h) . (subtract vPos)
-           . getField . rget (SField::SField Viewport)
+           . rvalf #viewport
         vPos@(V2 px py) = V2 160 120
 
 loop :: IO UI -> IO ()
@@ -67,9 +64,9 @@ loop tick = setup >>= go cam0
              let V2 ww wh = fromIntegral <$> (windowSize ui - V2 160 120)
                  mProj = projectionMatrix (deg2rad 30) (ww / wh) 0.01 100
                  mCam = camMatrix c
-                 info =  SField =:= mCam
-                     <+> SField =:= (mProj !*! mCam)
-                     <+> SField =:= (fromIntegral <$> windowSize ui)
+                 info = xrec ( mCam
+                             , mProj !*! mCam
+                             , fromIntegral <$> windowSize ui )
              draw info
              if keysPressed ui ^. contains Key'Escape
              then return () -- terminate
